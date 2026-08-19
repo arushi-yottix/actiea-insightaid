@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-service
+  labels:
+    app: llm-service
+    component: llm
+spec:
+  replicas: 1  # Start with 1, scale based on GPU availability
+  selector:
+    matchLabels:
+      app: llm-service
+  template:
+    metadata:
+      labels:
+        app: llm-service
+        component: llm
+    spec:
+      containers:
+      - name: llm
+        image: rag-llm:test  # Update with your registry/image
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8001
+          name: http
+          protocol: TCP
+        env:
+        - name: LLM_SERVICE_PORT
+          value: "8001"
+        - name: LLM_SERVICE_HOST
+          value: "0.0.0.0"
+        - name: HUGGINGFACE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: rag-secrets
+              key: huggingface-token
+              optional: true
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+            cpu: "4"
+            memory: "16Gi"
+          limits:
+            nvidia.com/gpu: 1
+            cpu: "8"
+            memory: "32Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 120  # Models take time to load
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 180  # Wait for models to load
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      # Node selector for GPU nodes
+      nodeSelector:
+        accelerator: "nvidia-tesla-t4"  # Or: nvidia.com/gpu: "true"
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+

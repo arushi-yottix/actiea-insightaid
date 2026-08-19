@@ -1,0 +1,36 @@
+# Requirements for API Service (CPU-only)
+# This service handles file uploads, document processing, embeddings, and RAG retrieval
+
+# Web Framework and API
+fastapi
+uvicorn[standard]
+pydantic>=2.0.0
+python-multipart>=0.0.6
+gradio
+
+# Vector Database
+qdrant-client==1.9.1
+
+# ML/AI Framework (CPU-only for embeddings)
+# torch is needed for sentence-transformers (used by Embedder)
+# transformers is needed because insightaid_rag_core.py imports it at top level
+# Note: torch is installed separately in Dockerfile.api with CPU-only index
+sentence-transformers
+transformers
+safetensors  # Allows models to load without torch 2.6 requirement
+
+# Document Processing
+pymupdf  # PyMuPDF for PDF extraction
+pillow  # PIL for image processing
+pytesseract  # OCR for text extraction
+
+# Data Processing
+numpy
+pyyaml
+
+# HTTP Client
+requests
+httpx  # For async HTTP calls to LLM service
+
+# Optional: Accuracy Metrics (uncomment if using accuracy_metrics.py)
+# bert-score

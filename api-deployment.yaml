@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-api
+  namespace: insightaid
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: rag-api
+  template:
+    metadata:
+      labels:
+        app: rag-api
+    spec:
+      containers:
+      - name: api
+        image: insightaid-api:test
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: api-config
+        env:
+        - name: LLM_SERVICE_TIMEOUT
+          value: "300.0"
+        - name: UPLOADS_DIR
+          value: "/app/uploads"
+        - name: MCP_REPO_DIR
+          value: "/app/documents"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+        livenessProbe:
+          httpGet:
+            path: /api/live
+            port: 3000
+          initialDelaySeconds: 180
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 5
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/uploads
+        - name: documents
+          mountPath: /app/documents
+      volumes:
+      - name: uploads
+        emptyDir: {}
+      - name: documents
+        emptyDir: {}

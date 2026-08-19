@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-service
+  namespace: insightaid
+  labels:
+    app: llm-service
+    component: llm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-service
+  template:
+    metadata:
+      labels:
+        app: llm-service
+        component: llm
+    spec:
+      containers:
+      - name: llm-service
+        image: mock-llm-service:test  # Mock service (no GPU needed)
+        imagePullPolicy: Never  # Use local image
+        ports:
+        - containerPort: 8001
+          name: http
+          protocol: TCP
+        env:
+        - name: LLM_SERVICE_PORT
+          value: "8001"
+        - name: LLM_SERVICE_HOST
+          value: "0.0.0.0"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 5  # Mock service starts quickly
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 5  # Mock service starts quickly
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+

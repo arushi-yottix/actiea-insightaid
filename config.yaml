@@ -1,0 +1,26 @@
+# config.yaml for LLM Service
+# Single model configuration
+
+server:
+  host: "0.0.0.0"  # Bind to all interfaces (required for server deployment)
+  port: 3003  # LLM service port
+
+llm:
+  #model_id: "Qwen/Qwen2.5-7B-Instruct"  # Single model - 7B optimized for T4 GPU
+  #model_max_length: 32768  # Qwen2.5-7B-Instruct: 32K context window
+
+  # Remote LLM API mode (Ollama or compatible API)
+  # remote_url: "http://192.168.41.49:12345"  # Remote server URL
+  # remote_model_name: "Qwen/Qwen2.5-7B-Instruct"  # Model name on the remote server
+  # remote_api_format: "openai"  # API format: "ollama", "openai" (for OpenAI-compatible APIs like vLLM), or "custom"
+  
+  remote_url: "http://192.168.41.49:11434"  # Ollama server URL
+  remote_model_name: "qwen2.5:32b"  # Model name on the remote server (Ollama format)
+  remote_api_format: "ollama"  # API format: "ollama" (default) or "custom" (for vLLM, TGI, etc.)
+  # Note: If remote_url is set, the service will use HTTP API calls instead of loading the model locally
+  # This is useful when the LLM is running on a separate server (e.g., Ollama)
+
+
+
+
+

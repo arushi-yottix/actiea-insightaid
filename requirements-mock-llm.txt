@@ -1,0 +1,9 @@
+# Requirements for Mock LLM Service (minimal, CPU-only)
+# This is a lightweight mock service for testing without GPU
+
+# Web Framework and API
+fastapi
+uvicorn[standard]
+pydantic>=2.0.0
+
+# No other dependencies needed - mock service is standalone

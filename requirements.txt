@@ -1,0 +1,36 @@
+# Requirements for LLM Service (GPU-enabled)
+# This service handles LLM model loading and inference on GPU nodes
+# Only needed for production mode (integration mode doesn't use LLM service)
+
+# Web Framework and API
+fastapi
+uvicorn[standard]
+pydantic>=2.0.0
+
+# ML/AI Framework (GPU-enabled for LLM inference)
+# torch with CUDA support is needed for LLM models
+# transformers is needed for LLM pipeline
+# Note: torch is installed separately in Dockerfile with CUDA support
+transformers
+safetensors  # Allows models to load without torch 2.6 requirement
+accelerate  # For model loading optimization
+sentence-transformers  # For embeddings (used in insightaid_call_llm)
+
+# Data Processing
+numpy
+pyyaml
+
+# PDF and Image Processing (used in insightaid_call_llm)
+PyMuPDF  # fitz - for PDF processing
+Pillow  # PIL - for image processing
+pytesseract  # OCR support
+
+# Vector Database Client
+qdrant-client==1.9.1  # For Qdrant vector database (used in insightaid_call_llm)
+
+# Configuration
+python-dotenv  # For loading .env file (load_dotenv)
+
+# HTTP Client for Remote LLM API
+httpx  # For calling remote LLM servers (Ollama, etc.)
+

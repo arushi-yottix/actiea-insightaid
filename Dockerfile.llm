@@ -1,0 +1,56 @@
+# Dockerfile for LLM Service (GPU)
+FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
+
+# Install Python
+RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3-pip \
+    python3-dev \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python as default
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
+RUN update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+
+WORKDIR /app
+
+# Copy requirements
+COPY requirements-llm.txt .
+
+# Install Python dependencies including PyTorch with CUDA
+# Install torch with CUDA support first
+RUN pip install --no-cache-dir \
+    torch \
+    torchvision \
+    torchaudio \
+    --index-url https://download.pytorch.org/whl/cu121
+
+# Install LLM service requirements
+RUN pip install --no-cache-dir -r requirements-llm.txt \
+    && rm -rf /root/.cache/pip
+
+# Copy application code
+COPY insightaid_llm_service.py .
+COPY insightaid_rag_core.py .
+COPY config.yaml .
+
+# Create logs directory
+RUN mkdir -p /app/logs
+
+# Expose port
+EXPOSE 8001
+
+# Set environment variables for CUDA
+ENV CUDA_VISIBLE_DEVICES=0
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+# Health check
+HEALTHCHECK --interval=60s --timeout=10s --start-period=180s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8001/health')"
+
+# Run the LLM service
+CMD ["python", "insightaid_llm_service.py"]
+

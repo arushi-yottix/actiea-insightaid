@@ -1,0 +1,26 @@
+# Requirements for LLM Service (GPU-enabled)
+# This service handles LLM model loading and text generation on GPU nodes
+
+# Web Framework and API
+fastapi
+uvicorn[standard]
+pydantic>=2.0.0
+
+# Core ML/AI Framework (GPU-enabled)
+# torch with CUDA support for GPU inference
+torch
+torchvision
+torchaudio
+# Note: Install with --index-url https://download.pytorch.org/whl/cu118 for CUDA 11.8
+# Or use cu121 for CUDA 12.1, or cpu for CPU-only
+
+transformers  # HuggingFace transformers for LLM models
+bitsandbytes  # For quantization (4-bit/8-bit) to reduce GPU memory
+huggingface-hub  # For downloading models from HuggingFace
+
+# Data Processing
+numpy
+pyyaml
+
+# Note: insightaid_rag_core.py is also needed (contains LLM class)
+# Copy insightaid_rag_core.py and config.yaml to LLM service container

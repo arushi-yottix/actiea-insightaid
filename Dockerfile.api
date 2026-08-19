@@ -1,0 +1,55 @@
+# Dockerfile for API Service (CPU-only)
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements-api.txt .
+
+# Install Python dependencies
+# Note: torch (CPU-only) is needed for sentence-transformers (used by Embedder)
+# transformers is needed because insightaid_rag_core.py imports it at top level
+
+# torch >= 2.6 preferred due to CVE-2025-32434, but safetensors bypasses the restriction
+# Install safetensors FIRST - it allows models to load without torch 2.6 requirement
+RUN pip install --no-cache-dir safetensors
+
+# Install torch (CPU-only) - try 2.6+ first, fallback to latest available
+# safetensors will handle model loading even if torch < 2.6
+RUN pip install --no-cache-dir \
+    torch \
+    torchvision \
+    torchaudio \
+    --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --upgrade --no-cache-dir "torch>=2.6" --index-url https://download.pytorch.org/whl/cpu || true
+
+# Install API service requirements
+RUN pip install --no-cache-dir -r requirements-api.txt \
+    && rm -rf /root/.cache/pip
+
+# Copy application code
+COPY insightaid_api_server.py .
+COPY insightaid_rag_core.py .
+COPY insightaid_prompts.py .
+COPY accuracy_metrics.py .
+COPY config.yaml .
+
+# Create directories
+RUN mkdir -p /app/uploads /app/documents /app/logs
+
+# Expose port
+EXPOSE 3000
+
+# Health check (Docker healthcheck - uses 0.0.0.0 for container networking)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD python -c "import requests; requests.get('http://0.0.0.0:3000/api/live')"
+
+# Run the API server
+CMD ["uvicorn", "insightaid_api_server:app", "--host", "0.0.0.0", "--port", "3000"]
+

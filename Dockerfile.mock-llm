@@ -1,0 +1,24 @@
+# Dockerfile for Mock LLM Service (CPU-only, no GPU needed)
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copy requirements
+COPY requirements-mock-llm.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements-mock-llm.txt
+
+# Copy mock service
+COPY mock_llm_service.py .
+
+# Expose port
+EXPOSE 8001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')" || exit 1
+
+# Run the mock service
+CMD ["python", "mock_llm_service.py"]
+
